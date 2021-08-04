@@ -6,22 +6,13 @@ im = np.array(Image.open('early-snow.png').convert('RGBA').rotate(90, expand=1))
 
 minLength = 15
 
-def sortInterval(input,begin,end):
+def sortIntervals(input,intervals):
 
-    interval = np.empty((end-begin, 4))
-    #print('begining interval from ', begin, ' to ', end)
+    output = np.empty(im.shape)
 
-    for i, pixel in enumerate(input):
-        if i == end:
-            break
-        if i >= begin:
-            interval[i-begin] = pixel
+    for i, inLine in enumerate(intervals):
+        outLine = []
         
-
-    interval.sort(0)
-
-    for i, pixel in enumerate(interval):
-        input[begin+i] = pixel
 
 
 #Implementations of interval selection methods
