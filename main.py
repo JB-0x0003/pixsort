@@ -35,7 +35,7 @@ def sortIntervals(inputImage,inputIntervals,method):
         for j, interval in enumerate(intLine):
             sort = np.argsort(parsedImage[i, interval[0]:interval[1]], axis=0)
             inputImage[i, interval[0]:interval[1]] = np.take_along_axis(inputImage[i, interval[0]:interval[1]], sort, 0)
-        
+
 
 
 #Finds intervals based on channel diff w/ minimum size
