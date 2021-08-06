@@ -1,20 +1,38 @@
 import numpy as np
 from PIL import Image
+import sys
+import argparse
 
-im = np.array(Image.open('early-snow.png').convert('RGBA').rotate(90, expand=1))
+#Sorts based on red channel only. Surprisingly good
+def sortDefault(input):
+    #:gigachad:
+    return input
 
+#Sorts based on difference from median pixel
+def sortMedian(input):
 
-minLength = 15
+    dummyImage = input.copy(order='K')
 
-#Sorts based on red channel only. Shockingly good
-def sortDefault(pixel):
-    return pixel
-    
+    for line in dummyImage:
+        line.sort(axis=0)
+
+    medianX = int(dummyImage.shape[1]/2)
+
+    for i, line in enumerate(input):
+
+        medianPixelR = np.intc(dummyImage[i,medianX,0])
+
+        for pixel in line:
+            pixel[0] = abs(medianPixelR - pixel[0])
+            pixel[1] = pixel[0]
+            pixel[2] = pixel[0]
+    return input
 
 #Listing of sorting methods
 SORTMETHODS = {
 
-    "DEFAULT" : sortDefault
+    "DEFAULT" : sortDefault,
+    "MEDIAN" : sortMedian
 
 }
 
@@ -22,13 +40,8 @@ SORTMETHODS = {
 def sortIntervals(inputImage,inputIntervals,method):
 
     print("beginning sorting....")
-    #Create Parsed version of image for determination of sorting 
-    parsedImage = inputImage.copy(order='K')
-
-    for line in parsedImage:
-        for pixel in line:
-            #Parse each pixel based on chosen method
-            pixel = SORTMETHODS[method](pixel)
+    #parse the image to generate instruction for sorting
+    parsedImage = SORTMETHODS[method](inputImage.copy(order='K'))
 
     for i, intLine in enumerate(inputIntervals):
         #For every line, sort the intervals previously decided upon
@@ -39,7 +52,7 @@ def sortIntervals(inputImage,inputIntervals,method):
 
 
 #Finds intervals based on channel diff w/ minimum size
-def intervalMinSize(input):
+def intervalDiff(input):
 
     allIntervals = []
     
@@ -76,7 +89,7 @@ def intervalMinSize(input):
 
 #List of interval selection methods
 INTERVALMETHODS = {
-    "MINSIZE" : intervalMinSize
+    "DIFFERENCE" : intervalDiff
 }
 
 
@@ -89,8 +102,32 @@ def findIntervals(input, method):
 
   
 ######BEGIN MAIN FUNCTION######
-intervals = findIntervals(im,"MINSIZE")
-sortIntervals(im, intervals, "DEFAULT")
+#Begin parsing argumnets
+parser = argparse.ArgumentParser(description="Easily Smear Pixels")
+parser.add_argument("image", help="File path of the image to be sorted")
+parser.add_argument("-o", "--output", help="File path for output to be saved to")
+
+args = parser.parse_args()
+inputPath = args.image
+outputPath = args.output
+
+im = np.array(Image.open(inputPath).convert('RGBA').rotate(90, expand=1))
+
+minLength = 5
+
+
+#intervals = findIntervals(im,"DIFFERENCE")
+#sortIntervals(im, intervals, "MEDIAN")
+
+#Determine output path if none available
+if outputPath == None:
+    outputPath = inputPath
+    for i in range(len(outputPath)):
+        if outputPath[len(outputPath)-i -1] == '.':
+            outputPath = outputPath[0:len(outputPath)- i - 1]
+            outputPath += '_sorted.png'
+            break
+
 
 #Write to output
-Image.fromarray(im).rotate(270, expand=1).save('early-snow-tim.png')
+Image.fromarray(im).rotate(270, expand=1).save(outputPath)
